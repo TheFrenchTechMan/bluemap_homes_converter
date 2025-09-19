@@ -2,10 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <title>FlaskApp</title>
 </head>
 <body>
-    <h1>Hello World!</h1>
-    <h2>Welcome to FlaskApp!</h2>
+    <h1><center>BlueMap Homes Converter</center></h1>
+    <h3><center>Convert your homes from FTB Essentials into Bluemap POIs wish ease!</center></h2>
+    
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+
+    <form enctype="multipart/form-data" method="post">
+        <input type="file" accept=".snbt, .zip">
+        <input type="submit" value="Upload">
+    </form>
 </body>
 </html>

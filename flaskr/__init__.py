@@ -1,32 +1,33 @@
 import os
 
-from flask import Flask, render_template
+from flask import Flask, flash, request, redirect, url_for, render_template
+from werkzeug.utils import secure_filename
 
+app = Flask(__name__)
+app.secret_key = "supersecretkey"
 
-def create_app(test_config=None):
-    # create and configure the app
-    app = Flask(__name__)
-    app.config.from_mapping(
-        SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
-    )
+UPLOAD_FOLDER = "uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-    if test_config is None:
-        # load the instance config, if it exists, when not testing
-        app.config.from_pyfile('config.py', silent=True)
-    else:
-        # load the test config if passed in
-        app.config.from_mapping(test_config)
+ALLOWED_EXTENSIONS = {"snbt", "zip"}
 
-    # ensure the instance folder exists
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-    # a simple page that says hello
-    @app.route('/')
-    def hello():
-        return render_template("index.html")
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-    return app
+@app.route('/', methods=["GET", "POST"])
+def page():
+    if request.method == "POST":
+        if "file" not in request.files:
+            flash("No file part")
+            return redirect(request.url)
+        file = request.files["file"]
+        if file.filename == "":
+            flash("No selected file")
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            flash(f"{filename} uploaded successfully!")
+    return render_template("index.html")
