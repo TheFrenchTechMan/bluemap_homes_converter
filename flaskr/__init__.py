@@ -6,8 +6,9 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = "./uploads/"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024 # 16 MB
 
 ALLOWED_EXTENSIONS = {"snbt", "zip"}
 
@@ -19,15 +20,18 @@ def allowed_file(filename):
 @app.route('/', methods=["GET", "POST"])
 def page():
     if request.method == "POST":
-        if "file" not in request.files:
+        if "files[]" not in request.files:
             flash("No file part")
             return redirect(request.url)
-        file = request.files["file"]
-        if file.filename == "":
+        
+        files = request.files.getlist("files[]")
+        if not files or all(f.filename == "" for f in files):
             flash("No selected file")
             return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-            flash(f"{filename} uploaded successfully!")
+        
+        for file in files:
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+                flash(f"{filename} uploaded successfully!")
     return render_template("index.html")
