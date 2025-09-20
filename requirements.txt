@@ -1,1 +1,2 @@
 flask
+ftb-snbt-lib
